@@ -3,11 +3,13 @@ import './App.css';
 import Web3 from 'web3';
 import { useEffect, useState } from 'react';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { loadContract } from "./Utils/loadContract "
 
 function App() {
   const [web3Api, setWeb3Api] = useState({
     provider: null,
     web3: null,
+    contract: null,
   })
 
   const [accounts, setAccounts] = useState(null);
@@ -16,12 +18,14 @@ function App() {
     const loadProvider = async () => {
 
       const provider = await detectEthereumProvider()
-      
+      const { contract } = await loadContract("Faucet", provider)
+
       if(provider){
         provider.request({method: "eth_requestAccounts"})
         setWeb3Api({
           web3: new web3(provider),
           provider: provider,
+          contract: contract,
         })
       } else {
         console.error("Please intall metamask");
