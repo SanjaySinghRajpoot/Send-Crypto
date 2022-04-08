@@ -2,41 +2,43 @@ import logo from './logo.svg';
 import './App.css';
 import Web3 from 'web3';
 import { useEffect, useState } from 'react';
+import detectEthereumProvider from '@metamask/detect-provider';
 
 function App() {
   const [web3Api, setWeb3Api] = useState({
     provider: null,
     web3: null,
   })
+
+  const [accounts, setAccounts] = useState(null);
  
   useEffect(() => {
     const loadProvider = async () => {
-      let provider = null;
 
-      if(window.ethereum){  // for new version of metamask
-         provider = window.ethereum;  
-
-         try{
-           await provider.enable();
-         } catch {
-           console.error("user denied account acess");
-         }
-      }
-      else if(window.web3){
-         provider = window.web3.currentProvider
-      }
-      else if (!process.env.production){
-          provider = new Web3.providers.HttpProvoder("http://localhost:7545")
+      const provider = await detectEthereumProvider()
+      
+      if(provider){
+        provider.request({method: "eth_requestAccounts"})
+        setWeb3Api({
+          web3: new web3(provider),
+          provider: provider,
+        })
+      } else {
+        console.error("Please intall metamask");
       }
 
-      setWeb3Api({
-        web3: new web3(provider),
-        provider: provider,
-      })
+      loadProvider()
     }
   }, [])
 
-  console.log(web3Api.web3);
+  useEffect(() => {
+    const getAccount  = async() => {
+        const accounts = await web3Api.web3.eth.getAccounts()
+        setAccounts(accounts[0]);   // select the first account from the array
+    } 
+
+    web3Api.web3 && getAccount()  // only check for account if web3 account exist 
+  },[web3Api.web3])
 
   return (
     <>
